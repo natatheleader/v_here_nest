@@ -1,0 +1,348 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+model User {
+    id                      String              @id @default(uuid())//String @id @default(uuid())
+
+    //add provider and figureout a way to use it
+
+    username                String              @unique @db.VarChar(255)
+    email                   String              @unique @db.VarChar(255)
+    phone                   String?             @unique @db.VarChar(255)
+    password                String              @db.VarChar(255)
+    provider                String              @default("local") @db.VarChar(255)
+    is_verified             Boolean             @default(false)
+    is_active               Boolean
+
+    refresh_token           String?             @db.VarChar(255)
+
+    created_at              DateTime            @default(now())
+    updated_at              DateTime            @updatedAt
+
+    password_resets         PasswordReset[]
+    profile                 Profile[]
+    post                    Post[]
+    sentment_count          Sentment_Count[]
+    comment_like            Comment_Like[]
+    comment_reply           Comment_Reply[]
+    replay_like             Replay_Like[]
+    report_post             Report_Post[]
+    report_comment          Report_Comment[]
+    report_replay           Report_Replay[]
+    option_count            Option_Count[]
+
+    @@map("users")
+}
+
+model PasswordReset {
+    id                      Int                 @id @default(autoincrement())
+
+    user_id                 String              @db.VarChar(255)
+    user                    User                @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+    reset_token             String              @db.VarChar(255)
+    otp                     String              @db.VarChar(255)
+    expiries_at             DateTime
+
+    created_at              DateTime            @default(now())
+    updated_at              DateTime            @updatedAt
+
+    @@map("password_resets")
+}
+
+model Profile {
+    id                      Int                 @id @default(autoincrement())
+
+    user_id                 String              @unique @db.VarChar(255)
+    User                    User                @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+    first_name              String              @db.VarChar(255)
+    last_name               String              @db.VarChar(255)
+    sex                     Sex                 @default(Unspecified)     
+    date_of_birth           String              @db.VarChar(255)
+    bio                     String?             @db.Text
+
+    profile_image           String?             @db.VarChar(255)
+
+    created_at              DateTime            @default(now())
+    updated_at              DateTime            @updatedAt
+
+    @@map("profiles")
+}
+
+model Catagory {
+    id                      Int                 @id @default(autoincrement())
+
+    catagory                String?             @db.VarChar(255)
+    detail                  String              @db.Text
+
+    created_at              DateTime            @default(now())
+    updated_at              DateTime            @updatedAt
+    is_deleted              Boolean             @default(false)
+
+    posts                   Post[]
+
+    @@map("catagories")
+}
+
+model Tag {
+    id                      Int                 @id @default(autoincrement())
+
+    tag                     String?             @db.VarChar(255)
+    detail                  String              @db.Text
+
+    created_at              DateTime            @default(now())
+    updated_at              DateTime            @updatedAt
+    is_deleted              Boolean             @default(false)
+
+    posts                   Post[]
+
+    @@map("tags")
+}
+
+model Post {
+    id                      Int                 @id @default(autoincrement())
+
+    user_id                 String              @unique @db.VarChar(255)
+    User                    User                @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+    catagory_id             Int                 
+    Catagory                Catagory            @relation(fields: [catagory_id], references: [id], onDelete: Cascade)
+
+    tag_id                  Int                 
+    Tag                     Tag                 @relation(fields: [tag_id], references: [id], onDelete: Cascade)
+
+    title                   String?             @db.VarChar(255)
+    detail                  String              @db.Text
+
+    anonumous               Boolean             @default(true)
+    comment                 Boolean             @default(true)
+    share                   Boolean             @default(true)
+
+    public                  Boolean             @default(false)
+
+    created_at              DateTime            @default(now())
+    updated_at              DateTime            @updatedAt
+    is_deleted              Boolean             @default(false)
+
+    comments                Comment[]
+    options                 Option[]
+    allowed_post_sentments  Allowed_Post_Sentment[]
+    report_post             Report_Post[]
+
+    @@map("posts")
+}
+
+model Comment {
+    id                      Int                 @id @default(autoincrement())
+
+    post_id                 Int                 
+    Post                    Post                @relation(fields: [post_id], references: [id], onDelete: Cascade)
+
+    comment                 String              @db.VarChar(255)
+    visible                 Boolean             @default(true)
+
+    created_at              DateTime            @default(now())
+    updated_at              DateTime            @updatedAt
+
+    comment_like            Comment_Like[]
+    comment_reply           Comment_Reply[]
+    report_comment          Report_Comment[]
+
+    @@map("comments")
+}
+
+model Option {
+    id                      Int                 @id @default(autoincrement())
+
+    post_id                 Int                 
+    Post                    Post                @relation(fields: [post_id], references: [id], onDelete: Cascade)
+
+    option                  String              @db.VarChar(255)
+
+    created_at              DateTime            @default(now())
+    updated_at              DateTime            @updatedAt
+
+    option_count            Option_Count[]
+
+    @@map("options")
+}
+
+model Option_Count {
+    id                      Int                 @id @default(autoincrement())
+
+    option_id               Int             
+    Option                  Option             @relation(fields: [option_id], references: [id], onDelete: Cascade)
+
+    user_id                 String              @unique @db.VarChar(255)
+    User                    User                @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+    created_at              DateTime            @default(now())
+    updated_at              DateTime            @updatedAt
+
+    @@map("option_counts")
+}
+
+model Sentment {
+    id                      Int                 @id @default(autoincrement())
+
+    name                    String              @db.VarChar(255)
+    emoji                   String              @db.VarChar(255)
+    description             String              @db.VarChar(255)
+
+    created_at              DateTime            @default(now())
+    updated_at              DateTime            @updatedAt
+
+    allowed_post_sentments  Allowed_Post_Sentment[]
+
+    @@map("sentments")
+}
+
+model Allowed_Post_Sentment {
+    id                      Int                 @id @default(autoincrement())
+
+    post_id                 Int                 
+    Post                    Post                @relation(fields: [post_id], references: [id], onDelete: Cascade)
+
+    sentment_id             Int                 
+    Sentment                Sentment            @relation(fields: [sentment_id], references: [id], onDelete: Cascade)
+
+    created_at              DateTime            @default(now())
+    updated_at              DateTime            @updatedAt
+
+    sentment_count          Sentment_Count[]
+
+    @@map("allowed_post_sentments")
+}
+
+model Sentment_Count {
+    id                      Int                 @id @default(autoincrement())
+
+    allowed_sentment_id     Int                 
+    Allowed_Post_Sentment   Allowed_Post_Sentment            @relation(fields: [allowed_sentment_id], references: [id], onDelete: Cascade)
+
+    user_id                 String              @unique @db.VarChar(255)
+    User                    User                @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+    created_at              DateTime            @default(now())
+    updated_at              DateTime            @updatedAt
+
+    @@map("post_sentments")
+}
+
+model Comment_Like {
+    id                      Int                 @id @default(autoincrement())
+
+    comment_id              Int             
+    Comment                 Comment             @relation(fields: [comment_id], references: [id], onDelete: Cascade)
+
+    user_id                 String              @unique @db.VarChar(255)
+    User                    User                @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+    created_at              DateTime            @default(now())
+    updated_at              DateTime            @updatedAt
+
+    @@map("comment_likes")
+}
+
+model Comment_Reply {
+    id                      Int                 @id @default(autoincrement()) 
+
+    comment_id              Int             
+    Comment                 Comment             @relation(fields: [comment_id], references: [id], onDelete: Cascade)
+
+    user_id                 String              @unique @db.VarChar(255)
+    User                    User                @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+    replay                  String              @db.VarChar(255)   
+    visible                 Boolean             @default(true)   
+
+    created_at              DateTime            @default(now())
+    updated_at              DateTime            @updatedAt
+
+    reply_like              Replay_Like[]
+    report_replay           Report_Replay[]
+
+    @@map("comment_replys")
+}
+
+model Replay_Like {
+    id                      Int                 @id @default(autoincrement())
+
+    comment_replay_id       Int             
+    comment_reply           Comment_Reply       @relation(fields: [comment_replay_id], references: [id], onDelete: Cascade)
+
+    user_id                 String              @unique @db.VarChar(255)
+    User                    User                @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+    created_at              DateTime            @default(now())
+    updated_at              DateTime            @updatedAt
+
+    @@map("replay_likes")
+}
+
+model Report_Post {
+    id                      Int                 @id @default(autoincrement())
+
+    post_id                 Int                 
+    Post                    Post                @relation(fields: [post_id], references: [id], onDelete: Cascade)
+
+    user_id                 String              @unique @db.VarChar(255)
+    User                    User                @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+    description             String              @db.VarChar(255)
+
+    created_at              DateTime            @default(now())
+    updated_at              DateTime            @updatedAt
+
+    @@map("report_posts")
+}
+
+model Report_Comment {
+    id                      Int                 @id @default(autoincrement())
+
+    comment_id              Int             
+    Comment                 Comment             @relation(fields: [comment_id], references: [id], onDelete: Cascade)
+
+    user_id                 String              @unique @db.VarChar(255)
+    User                    User                @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+    description             String              @db.VarChar(255)
+
+    created_at              DateTime            @default(now())
+    updated_at              DateTime            @updatedAt
+
+    @@map("report_comments")
+}
+
+model Report_Replay {
+    id                      Int                 @id @default(autoincrement())
+
+    comment_replay_id       Int             
+    comment_reply           Comment_Reply       @relation(fields: [comment_replay_id], references: [id], onDelete: Cascade)
+
+    user_id                 String              @unique @db.VarChar(255)
+    User                    User                @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+    description             String              @db.VarChar(255)
+
+    created_at              DateTime            @default(now())
+    updated_at              DateTime            @updatedAt
+
+    @@map("report_replays")
+}
+
+enum Sex {
+    Male
+    Female
+    Unspecified
+}
